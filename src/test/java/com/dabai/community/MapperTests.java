@@ -1,8 +1,10 @@
 package com.dabai.community;
 
 import com.dabai.community.dao.DiscussPostMapper;
+import com.dabai.community.dao.LoginTicketMapper;
 import com.dabai.community.dao.UserMapper;
 import com.dabai.community.entity.DiscussPost;
+import com.dabai.community.entity.LoginTicket;
 import com.dabai.community.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ public class MapperTests {
 
     @Autowired
     private DiscussPostMapper discussPostMapper;
+
+    @Autowired
+    private LoginTicketMapper loginTicketMapper;
 
     @Test
     public void testSelectUser() {
@@ -76,5 +81,30 @@ public class MapperTests {
 
         int rows = discussPostMapper.selectDiscussPostRows(101);
         System.out.println("user_id为101的用户 发帖数量为："+rows);
+    }
+
+
+    @Test
+    public void testInsertLoginTicket() {
+        LoginTicket ticket = new LoginTicket();
+        ticket.setUserId(101);
+        ticket.setTicket("abc");
+        ticket.setStatus(0);
+        ticket.setExpired(new Date(System.currentTimeMillis() + 1000 * 60 * 10));
+
+        loginTicketMapper.insertLoginTicket(ticket);
+    }
+
+    @Test
+    public void testSelectByTicket() {
+        LoginTicket ticket = loginTicketMapper.selectByTicket("abc");
+        System.out.println(ticket);
+    }
+
+    @Test
+    public void testUpdateStatus() {
+
+        int i = loginTicketMapper.updateStatus("abc", 1);
+        System.out.println(i);
     }
 }

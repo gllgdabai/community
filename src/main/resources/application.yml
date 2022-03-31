@@ -17,6 +17,11 @@ spring:
       maximum-pool-size: 15
       minimum-idle: 5
       idle-timeout: 30000
+  # MailProperties
+  mail:
+    host: smtp.qq.com
+    username: 952710554@qq.com
+    password: bsnplvnddkisbgae
 
 # MybatisProperties
 mybatis:
@@ -33,3 +38,9 @@ mybatis:
 #    com:
 #      dabai:
 #        community: debug
+
+# 自定义配置community
+community:
+  path:
+    domain: http://localhost:8080
+
