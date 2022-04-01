@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @Controller
 public class LoginController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
+    private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
     @Autowired
     private UserService userService;
@@ -51,8 +51,14 @@ public class LoginController {
     }
 
     @PostMapping("/register")
-    public String register(Model model, User user) {
-        Map<String, Object> map = userService.register(user);
+    /*
+        1.前端input的name属性需要和bean的变量名对应才能成功取到值，即表单参数名与实体属性名对应。
+        2.由于表单传入的数据较多，通过实体接收比较方便，同样也要保证表单参数名与这个对象的属性同名，
+        并且springmvc会自动把user实体封装到model对象里，页面直接可以用。
+        3.confirmpassword从request里可以取到，用param即可。
+     */
+    public String register(Model model, User user, String confirmPassword) {
+        Map<String, Object> map = userService.register(user, confirmPassword);
         if (map == null || map.isEmpty()) { //说明注册成功
             model.addAttribute("msg","注册成功，我们已经向您的邮件发送了一封激活邮件，请尽快激活！");
             model.addAttribute("target","/index");  // 跳转页面
@@ -61,6 +67,7 @@ public class LoginController {
             // 注册失败
             model.addAttribute("usernameMsg", map.get("usernameMsg"));
             model.addAttribute("passwordMsg",map.get("passwordMsg"));
+            model.addAttribute("confirmPasswordMsg",map.get("confirmPasswordMsg"));
             model.addAttribute("emailMsg",map.get("emailMsg"));
             return "/site/register";
         }
@@ -102,7 +109,7 @@ public class LoginController {
             OutputStream os = response.getOutputStream();
             ImageIO.write(image, "png", os);
         } catch (IOException e) {
-            LOGGER.error("响应验证码失败：" + e.getMessage());
+            log.error("响应验证码失败：" + e.getMessage());
         }
     }
 

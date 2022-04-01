@@ -17,7 +17,7 @@ import javax.mail.internet.MimeMessage;
  */
 @Component
 public class MailClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailClient.class);
+    private static final Logger log = LoggerFactory.getLogger(MailClient.class);
 
     @Autowired
     private JavaMailSender mailSender;
@@ -41,7 +41,7 @@ public class MailClient {
             helper.setText(context,true);   // 支持html文本
             mailSender.send(helper.getMimeMessage());   //发送邮件
         } catch (MessagingException e) {
-            LOGGER.info("发送邮件失败：" + e.getMessage());
+            log.info("发送邮件失败：" + e.getMessage());
         }
     }
 }

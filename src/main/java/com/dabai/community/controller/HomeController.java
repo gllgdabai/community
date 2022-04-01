@@ -45,7 +45,9 @@ public class HomeController {
                 discussPosts.add(map);
             }
         }
-        model.addAttribute("discussPosts",discussPosts);
+        // Model的底层为一个HashMap。
+        // Model 中的数据存储在 request 作用域中，SringMVC默认采用转发的方式跳转到视图，本次请求结束，模型中的数据被销毁。
+        model.addAttribute("discussPosts",discussPosts);    //使用Model向request域对象共享数据
         return "/index";
     }
 

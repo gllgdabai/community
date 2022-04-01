@@ -45,4 +45,5 @@ public interface UserMapper {
      * @return 影响的行数
      */
     int updatePassword(int id, String password);
+
 }

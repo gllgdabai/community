@@ -19,7 +19,7 @@ public interface UserService {
      *  注册用户
      * @return  失败消息，说明失败的原因，成功则返回null。
      */
-    Map<String,Object> register(User user);
+    Map<String,Object> register(User user, String confirmPassword);
 
     /**
      *  激活用户
@@ -44,6 +44,28 @@ public interface UserService {
      */
     void logout(String ticket);
 
+    /**
+     * 根据ticket 查询 登录凭证login_ticket
+     * @param ticket Cookie中存放的ticket
+     * @return  登录凭证
+     */
     LoginTicket findLoginTicket(String ticket);
+
+    /**
+     *  修改用户头像
+     * @param userId 用户Id
+     * @param headerUrl 新头像的url
+     */
+    int updateHeader(int userId, String headerUrl);
+
+    /**
+     *  修改用户密码
+     * @param user 当前用户
+     * @param oldPassword 用户输入的原密码
+     * @param newPassword 用户输入的新密码
+     * @param confirmPassword 用户输入的确认密码
+     * @return 失败消息，说明失败的原因，成功则返回null。
+     */
+    Map<String, Object> updatePassword(String oldPassword, String newPassword, String confirmPassword);
 
 }
