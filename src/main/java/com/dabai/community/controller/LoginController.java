@@ -1,8 +1,7 @@
 package com.dabai.community.controller;
 
+import com.dabai.community.common.Constants;
 import com.dabai.community.entity.User;
-import com.dabai.community.enums.ActivationEnum;
-import com.dabai.community.enums.ExpirationEnum;
 import com.dabai.community.service.UserService;
 import com.google.code.kaptcha.Producer;
 import org.apache.commons.lang3.StringUtils;
@@ -12,7 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
@@ -80,10 +82,10 @@ public class LoginController {
                              @PathVariable("code") String code)
     {
         int result = userService.activation(userId, code);
-        if (result == ActivationEnum.ACTIVATION_SUCCESS.getStatus()) {
+        if (result == Constants.ACTIVATION_SUCCESS) {
             model.addAttribute("msg","激活成功，您的账户可以正常使用了！");
             model.addAttribute("target","/login");
-        } else if (result == ActivationEnum.ACTIVATION_REPEAT.getStatus()) {
+        } else if (result == Constants.ACTIVATION_REPEAT) {
             model.addAttribute("msg","无效操作，该账户已经激活过了！");
             model.addAttribute("target","/index");
         } else {
@@ -137,8 +139,8 @@ public class LoginController {
         }
 
         // 验证账户名和密码
-        int expiredSeconds = rememberMe ? ExpirationEnum.REMEMBER_EXPIRED_SECONDS.getExpiration() :
-                ExpirationEnum.DEFAULT_EXPIRED_SECONDS.getExpiration();
+        int expiredSeconds = rememberMe ? Constants.REMEMBER_EXPIRED_SECONDS :
+                Constants.DEFAULT_EXPIRED_SECONDS;
         Map<String, Object> loginMap = userService.login(username, password, expiredSeconds);
         if (loginMap.containsKey("ticket")) {   // 登录成功
             // 把登录凭证放入cookie中，传给客户端(浏览器)

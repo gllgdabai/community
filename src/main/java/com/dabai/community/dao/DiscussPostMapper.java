@@ -27,4 +27,23 @@ public interface DiscussPostMapper {
      * @param userId 用户Id，如果传入userId=0，则查询所有用户
      */
     int selectDiscussPostRows(@Param("userId") int userId);
+
+    /**
+     *  新增帖子
+     * @param discussPost   帖子实体
+     */
+    int insertDiscussPost(DiscussPost discussPost);
+
+    /**
+     *  根据id查询帖子
+     * @param id discuss_post表的主键id
+     */
+    DiscussPost selectDiscussPostById(int id);
+
+    /**
+     *  更新帖子的评论数量
+     * @param id    帖子id
+     * @param commentCount 新的评论数量
+     */
+    int updateCommentCount(int id, int commentCount);
 }

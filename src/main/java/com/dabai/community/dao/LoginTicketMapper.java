@@ -9,23 +9,26 @@ import org.apache.ibatis.annotations.*;
  */
 @Mapper
 public interface LoginTicketMapper {
-    @Insert("insert into login_ticket(user_id, ticket, status, expired) " +
-            "values (#{userId},#{ticket},#{status},#{expired})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
+    /**
+     * 新增登录凭证
+     * @param loginTicket 登陆凭证
+     * @return 影响的行数
+     */
     int insertLoginTicket(LoginTicket loginTicket);
 
-    @Select({
-            "select id,user_id,ticket,status,expired "+
-            "from login_ticket where ticket=#{ticket}"
-    })
+    /**
+     * 根据ticket查询登录凭证
+     * @param ticket Cookie中存放的ticket
+     * @return  登录凭证
+     */
     LoginTicket selectByTicket(String ticket);
 
-    @Update(
-            "update login_ticket set status=#{status} where ticket=#{ticket} "
-    )
+    /**
+     * 更新登陆凭证
+     * @param ticket Cookie中存放的ticket
+     * @param status 凭证状态，0-有效; 1-无效
+     * @return 影响的行数
+     */
     int updateStatus(String ticket, int status);
-
-
-
 
 }

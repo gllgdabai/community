@@ -1,10 +1,10 @@
 package com.dabai.community.service.impl;
 
+import com.dabai.community.common.Constants;
 import com.dabai.community.dao.LoginTicketMapper;
 import com.dabai.community.dao.UserMapper;
 import com.dabai.community.entity.LoginTicket;
 import com.dabai.community.entity.User;
-import com.dabai.community.enums.ActivationEnum;
 import com.dabai.community.service.UserService;
 import com.dabai.community.utils.CommunityUtil;
 import com.dabai.community.utils.HostHolder;
@@ -129,12 +129,12 @@ public class UserServiceImpl implements UserService {
     public int activation(int userId, String code) {
         User user = userMapper.selectById(userId);
         if (user.getStatus() == 1) {    //已激活
-            return ActivationEnum.ACTIVATION_REPEAT.getStatus();
+            return Constants.ACTIVATION_REPEAT;
         } else if (code.equals(user.getActivationCode())) {
             userMapper.updateStatus(userId, 1);//更改状态，变为已激活
-            return ActivationEnum.ACTIVATION_SUCCESS.getStatus();
+            return Constants.ACTIVATION_SUCCESS;
         } else {
-            return ActivationEnum.ACTIVATION_FAILURE.getStatus();
+            return Constants.ACTIVATION_FAILURE;
         }
     }
 
