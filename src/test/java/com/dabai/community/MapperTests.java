@@ -2,9 +2,11 @@ package com.dabai.community;
 
 import com.dabai.community.dao.DiscussPostMapper;
 import com.dabai.community.dao.LoginTicketMapper;
+import com.dabai.community.dao.MessageMapper;
 import com.dabai.community.dao.UserMapper;
 import com.dabai.community.entity.DiscussPost;
 import com.dabai.community.entity.LoginTicket;
+import com.dabai.community.entity.Message;
 import com.dabai.community.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class MapperTests {
 
     @Autowired
     private LoginTicketMapper loginTicketMapper;
+
+    @Autowired
+    private MessageMapper messageMapper;
 
     @Test
     public void testSelectUser() {
@@ -106,5 +111,36 @@ public class MapperTests {
 
         int i = loginTicketMapper.updateStatus("abc", 1);
         System.out.println(i);
+    }
+
+    @Test
+    public void testSelectConversations() {
+        List<Message> messages = messageMapper.selectConversations(111, 0, 100);
+        for (Message message : messages) {
+            System.out.println(message);
+        }
+    }
+
+    @Test
+    public void testSelectConversationCount() {
+        System.out.println(messageMapper.selectConversationCount(111));
+    }
+
+    @Test
+    public void testSelectLetters() {
+        List<Message> messages = messageMapper.selectLetters("111_112", 0, 10);
+        for (Message message : messages) {
+            System.out.println(message);
+        }
+    }
+
+    @Test
+    public void testSelectLetterCount() {
+        System.out.println(messageMapper.selectLetterCount("111_112"));
+    }
+
+    @Test
+    public void testSelectLetterUnreadCount() {
+        System.out.println(messageMapper.selectLetterUnreadCount(131, "111_131"));
     }
 }

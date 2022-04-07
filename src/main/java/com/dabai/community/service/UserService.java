@@ -60,7 +60,6 @@ public interface UserService {
 
     /**
      *  修改用户密码
-     * @param user 当前用户
      * @param oldPassword 用户输入的原密码
      * @param newPassword 用户输入的新密码
      * @param confirmPassword 用户输入的确认密码
@@ -68,4 +67,8 @@ public interface UserService {
      */
     Map<String, Object> updatePassword(String oldPassword, String newPassword, String confirmPassword);
 
+    /**
+     *  根据用户名查询用户
+     */
+    User findUserByName(String username);
 }

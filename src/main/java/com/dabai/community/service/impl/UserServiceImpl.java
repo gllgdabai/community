@@ -236,5 +236,10 @@ public class UserServiceImpl implements UserService {
         return map;
     }
 
+    @Override
+    public User findUserByName(String username) {
+        return userMapper.selectByName(username);
+    }
+
 
 }
