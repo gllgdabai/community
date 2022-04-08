@@ -1,6 +1,8 @@
 package com.dabai.community.controller;
 
 import com.dabai.community.annotation.LoginRequired;
+import com.dabai.community.entity.User;
+import com.dabai.community.service.LikeService;
 import com.dabai.community.service.UserService;
 import com.dabai.community.utils.CommunityUtil;
 import com.dabai.community.utils.HostHolder;
@@ -48,6 +50,9 @@ public class UserController {
 
     @Autowired
     private HostHolder hostHolder;
+    
+    @Autowired
+    private LikeService likeService;
 
     @LoginRequired
     @GetMapping("/setting")
@@ -117,6 +122,7 @@ public class UserController {
             log.error("读取头像失败: " + e.getMessage());
         }
     }
+
     @LoginRequired
     @PostMapping("/updatePwd")
     public String updatePwd(Model model, String oldPassword, String newPassword, String confirmPassword) {
@@ -130,5 +136,22 @@ public class UserController {
             model.addAttribute("confirmPasswordMsg", map.get("confirmPasswordMsg"));
             return "/site/setting";
         }
+    }
+
+    // 个人主页
+    @GetMapping("/profile/{userId}")
+    public String getProfilePage(@PathVariable("userId") int userId, Model model) {
+        User user = userService.findUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("该用户不存在!");
+        }
+
+        //用户
+        model.addAttribute("user",user);
+        // 获得的赞的数量
+        int likeCount = likeService.findUserLikeCount(userId);
+        model.addAttribute("likeCount",likeCount);
+
+        return "/site/profile";
     }
 }
