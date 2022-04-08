@@ -1,9 +1,11 @@
 package com.dabai.community.controller;
 
+import com.dabai.community.common.Constants;
 import com.dabai.community.entity.DiscussPost;
 import com.dabai.community.entity.Page;
 import com.dabai.community.entity.User;
 import com.dabai.community.service.DiscussPostService;
+import com.dabai.community.service.LikeService;
 import com.dabai.community.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,8 +27,12 @@ public class HomeController {
 
     @Autowired
     private UserService userService;
+
     @Autowired
     private DiscussPostService discussPostService;
+
+    @Autowired
+    private LikeService likeService;
 
     @RequestMapping(path = "/index", method = RequestMethod.GET)
     public String getIndexPage(Model model, Page page) {
@@ -42,6 +48,10 @@ public class HomeController {
                 map.put("post",post);
                 User user = userService.findUserById(post.getUserId());
                 map.put("user",user);
+                // 点赞的数量
+                long likeCount = likeService.findEntityLikeCount(Constants.ENTITY_TYPE_POST, post.getId());
+                map.put("likeCount",likeCount);
+
                 discussPosts.add(map);
             }
         }

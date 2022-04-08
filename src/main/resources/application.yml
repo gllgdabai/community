@@ -22,6 +22,11 @@ spring:
     host: smtp.qq.com
     username: 952710554@qq.com
     password: bsnplvnddkisbgae
+  # redisProperties
+  redis:
+    database: 1
+    host: localhost
+    port: 6379
 
 # MybatisProperties
 mybatis:
