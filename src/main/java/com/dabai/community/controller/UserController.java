@@ -1,7 +1,9 @@
 package com.dabai.community.controller;
 
 import com.dabai.community.annotation.LoginRequired;
+import com.dabai.community.common.Constants;
 import com.dabai.community.entity.User;
+import com.dabai.community.service.FollowService;
 import com.dabai.community.service.LikeService;
 import com.dabai.community.service.UserService;
 import com.dabai.community.utils.CommunityUtil;
@@ -53,6 +55,9 @@ public class UserController {
     
     @Autowired
     private LikeService likeService;
+
+    @Autowired
+    private FollowService followService;
 
     @LoginRequired
     @GetMapping("/setting")
@@ -146,11 +151,23 @@ public class UserController {
             throw new RuntimeException("该用户不存在!");
         }
 
-        //用户
+        // 用户
         model.addAttribute("user",user);
         // 获得的赞的数量
         int likeCount = likeService.findUserLikeCount(userId);
         model.addAttribute("likeCount",likeCount);
+        // 关注数量
+        long followeeCount = followService.findFolloweeCount(userId, Constants.ENTITY_TYPE_USER);
+        model.addAttribute("followeeCount",followeeCount);
+        // 粉丝数量
+        long followerCount = followService.findFollowerCount(Constants.ENTITY_TYPE_USER, userId);
+        model.addAttribute("followerCount",followerCount);
+        // 是否已关注
+        boolean hasFollowed = false;
+        if (hostHolder.getUser() != null) {
+            hasFollowed = followService.hasFollowed(hostHolder.getUser().getId(), Constants.ENTITY_TYPE_USER, userId);
+        }
+        model.addAttribute("hasFollowed",hasFollowed);
 
         return "/site/profile";
     }

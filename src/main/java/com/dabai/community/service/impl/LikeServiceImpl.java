@@ -45,11 +45,11 @@ public class LikeServiceImpl implements LikeService {
                 operations.multi(); // 开启事务
 
                 if (isLiked) { // 该用户已点赞，再点击就是取消点赞
-                    redisTemplate.opsForSet().remove(entityLikeKey,userId);
-                    redisTemplate.opsForValue().decrement(userLikeKey);
+                    operations.opsForSet().remove(entityLikeKey,userId);
+                    operations.opsForValue().decrement(userLikeKey);
                 } else {
-                    redisTemplate.opsForSet().add(entityLikeKey,userId);
-                    redisTemplate.opsForValue().increment(userLikeKey);
+                    operations.opsForSet().add(entityLikeKey,userId);
+                    operations.opsForValue().increment(userLikeKey);
                 }
 
                 return operations.exec();   // 提交事务
