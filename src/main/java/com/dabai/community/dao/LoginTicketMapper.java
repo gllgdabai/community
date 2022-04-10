@@ -3,11 +3,12 @@ package com.dabai.community.dao;
 import com.dabai.community.entity.LoginTicket;
 import org.apache.ibatis.annotations.*;
 
-/**
+/** 已弃用，登录凭证不再存入数据库表login_ticket，而是存入redis缓存
  * @author
  * @create 2022-03-30 19:30
  */
 @Mapper
+@Deprecated // 不推荐使用
 public interface LoginTicketMapper {
     /**
      * 新增登录凭证

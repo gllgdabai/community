@@ -3,12 +3,15 @@ package com.dabai.community.controller;
 import com.dabai.community.common.Constants;
 import com.dabai.community.entity.User;
 import com.dabai.community.service.UserService;
+import com.dabai.community.utils.CommunityUtil;
+import com.dabai.community.utils.RedisKeyUtil;
 import com.google.code.kaptcha.Producer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -19,11 +22,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author
@@ -38,6 +41,9 @@ public class LoginController {
     
     @Autowired
     private Producer kaptchaProducer;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Value("server.servlet.context-path")
     private String contextPath;
@@ -96,15 +102,44 @@ public class LoginController {
         return "/site/operate-result";
     }
 
-    // 获取验证码
+    // 已弃用。获取验证码，存入session
+//    @GetMapping("/kaptcha")
+//    public void getKaptcha(HttpServletResponse response, HttpSession session) {
+//        // 生成验证码
+//        String text = kaptchaProducer.createText();
+//        BufferedImage image = kaptchaProducer.createImage(text);
+//
+//        // 将验证码存入session
+//        session.setAttribute("kaptcha",text);
+//        // 将验证码图片输出给浏览器
+//        response.setContentType("image/png");
+//        try {
+//            OutputStream os = response.getOutputStream();
+//            ImageIO.write(image, "png", os);
+//        } catch (IOException e) {
+//            log.error("响应验证码失败：" + e.getMessage());
+//        }
+//    }
+
+    // 重构：获取验证码，存入redis中
     @GetMapping("/kaptcha")
-    public void getKaptcha(HttpServletResponse response, HttpSession session) {
+    public void getKaptcha(HttpServletResponse response) {
         // 生成验证码
         String text = kaptchaProducer.createText();
         BufferedImage image = kaptchaProducer.createImage(text);
 
-        // 将验证码存入session
-        session.setAttribute("kaptcha",text);
+        // 验证码的归属：给客户端临时的凭证，一个随机生成的字符串
+        String kaptchaOwner = CommunityUtil.generateUUID();
+        // 需要发送给客户端，因此需要存入Cookie中
+        Cookie cookie = new Cookie("kaptchaOwner", kaptchaOwner);
+        cookie.setMaxAge(60);   // 设置cookie有效时间为60秒
+        cookie.setPath(contextPath);  // 设置cookie有效路径为整个项目
+        response.addCookie(cookie);
+
+        // 将验证码存入redis
+        String kaptchaKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+        redisTemplate.opsForValue().set(kaptchaKey, text, 60, TimeUnit.SECONDS);
+
         // 将验证码图片输出给浏览器
         response.setContentType("image/png");
         try {
@@ -116,7 +151,7 @@ public class LoginController {
     }
 
     /**
-     *  处理登录请求
+     *  已弃用，处理登录请求，从session中取验证码
      * @param model
      * @param username 用户输入的账户
      * @param password 用户输入的密码
@@ -126,12 +161,58 @@ public class LoginController {
      * @param response  cookie
      * @return
      */
+//    @PostMapping("/login")
+//    public String login(Model model, String username, String password,
+//                        String verifycode, boolean rememberMe,
+//                        HttpSession session, HttpServletResponse response) {
+//        // 验证 验证码
+//        String kaptcha = (String) session.getAttribute("kaptcha");
+//        if (StringUtils.isBlank(verifycode) || StringUtils.isBlank(kaptcha)
+//                || !verifycode.equalsIgnoreCase(kaptcha)) {
+//            model.addAttribute("codeMsg", "输入的验证码不正确!");
+//            return "/site/login";
+//        }
+//
+//        // 验证账户名和密码
+//        int expiredSeconds = rememberMe ? Constants.REMEMBER_EXPIRED_SECONDS :
+//                Constants.DEFAULT_EXPIRED_SECONDS;
+//        Map<String, Object> loginMap = userService.login(username, password, expiredSeconds);
+//        if (loginMap.containsKey("ticket")) {   // 登录成功
+//            // 把登录凭证放入cookie中，传给客户端(浏览器)
+//            Cookie cookie = new Cookie("ticket", loginMap.get("ticket").toString());
+//            cookie.setPath(contextPath);   // 设置cookie的有效路径
+//            cookie.setMaxAge(expiredSeconds);   // 设置cookie的有效时间
+//            response.addCookie(cookie);
+//            return "redirect:/index";   // 重定向到首页
+//        } else {    // 登录失败
+//            model.addAttribute("usernameMsg", loginMap.get("usernameMsg"));
+//            model.addAttribute("passwordMsg", loginMap.get("passwordMsg"));
+//            return "/site/login";
+//        }
+//    }
+
+    /**
+     *  重构，处理登录请求，从redis中取验证码
+     * @param model
+     * @param username 用户输入的账户
+     * @param password 用户输入的密码
+     * @param verifycode  用户输入的验证码
+     * @param rememberMe 是否勾选"记住我"
+     * @param response  cookie
+     * @param kaptchaOwner 从cookie中取出验证码凭证
+     * @return
+     */
     @PostMapping("/login")
     public String login(Model model, String username, String password,
-                        String verifycode, boolean rememberMe,
-                        HttpSession session, HttpServletResponse response) {
+                        String verifycode, boolean rememberMe, HttpServletResponse response,
+                        @CookieValue("kaptchaOwner") String kaptchaOwner) {
         // 验证 验证码
-        String kaptcha = (String) session.getAttribute("kaptcha");
+        String kaptcha = null;
+        if (StringUtils.isNotBlank(kaptchaOwner)) {
+            String kaptchaKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+            kaptcha = (String) redisTemplate.opsForValue().get(kaptchaKey);
+        }
+
         if (StringUtils.isBlank(verifycode) || StringUtils.isBlank(kaptcha)
                 || !verifycode.equalsIgnoreCase(kaptcha)) {
             model.addAttribute("codeMsg", "输入的验证码不正确!");

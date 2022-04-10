@@ -1,7 +1,6 @@
 package com.dabai.community.service.impl;
 
 import com.dabai.community.common.Constants;
-import com.dabai.community.dao.LoginTicketMapper;
 import com.dabai.community.dao.UserMapper;
 import com.dabai.community.entity.LoginTicket;
 import com.dabai.community.entity.User;
@@ -9,9 +8,11 @@ import com.dabai.community.service.UserService;
 import com.dabai.community.utils.CommunityUtil;
 import com.dabai.community.utils.HostHolder;
 import com.dabai.community.utils.MailClient;
+import com.dabai.community.utils.RedisKeyUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -20,6 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author
@@ -37,11 +39,14 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private TemplateEngine templateEngine;
 
-    @Autowired
-    private LoginTicketMapper loginTicketMapper;
+//    @Autowired
+//    private LoginTicketMapper loginTicketMapper;
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Value("${community.path.domain}")
     private String domain;  //域名
@@ -51,7 +56,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findUserById(int id) {
-        return userMapper.selectById(id);
+//        return userMapper.selectById(id); // 重构：使用redis缓存用户信息
+        User user = getCache(id);
+        if (user == null) {
+            user = initCache(id);
+        }
+        return user;
     }
 
     @Override
@@ -132,6 +142,8 @@ public class UserServiceImpl implements UserService {
             return Constants.ACTIVATION_REPEAT;
         } else if (code.equals(user.getActivationCode())) {
             userMapper.updateStatus(userId, 1);//更改状态，变为已激活
+            // 由于用户信息被修改了，需要清除用户缓存
+            clearCache(userId);
             return Constants.ACTIVATION_SUCCESS;
         } else {
             return Constants.ACTIVATION_FAILURE;
@@ -180,7 +192,11 @@ public class UserServiceImpl implements UserService {
         // ms为单位，需要乘以1000L。需要转换为long型，否则会发生数据丢失
         loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000L));
 
-        loginTicketMapper.insertLoginTicket(loginTicket);
+//        loginTicketMapper.insertLoginTicket(loginTicket); // 已弃用
+
+        String ticketKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
+        // 将loginTicket对象 序列化 为一个字符串存入redis中
+        redisTemplate.opsForValue().set(ticketKey, loginTicket);
 
         map.put("ticket",ticket);
         return map;
@@ -188,17 +204,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void logout(String ticket) {
-        loginTicketMapper.updateStatus(ticket, 1);
+//        loginTicketMapper.updateStatus(ticket, 1);    // 已弃用
+        String ticketKey = RedisKeyUtil.getTicketKey(ticket);
+        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(ticketKey);
+        loginTicket.setStatus(1);
+        redisTemplate.opsForValue().set(ticketKey, loginTicket);
     }
 
     @Override
     public LoginTicket findLoginTicket(String ticket) {
-        return loginTicketMapper.selectByTicket(ticket);
+//        return loginTicketMapper.selectByTicket(ticket);
+        String ticketKey = RedisKeyUtil.getTicketKey(ticket);
+        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(ticketKey);
+        return loginTicket;
     }
 
     @Override
     public int updateHeader(int userId, String headerUrl) {
-        return userMapper.updateHeader(userId, headerUrl);
+//        return userMapper.updateHeader(userId, headerUrl);
+        int rows = userMapper.updateHeader(userId, headerUrl);
+        if (rows > 0) clearCache(userId);
+        return rows;
     }
 
     @Override
@@ -241,5 +267,25 @@ public class UserServiceImpl implements UserService {
         return userMapper.selectByName(username);
     }
 
+
+
+    // 由于findUserById会被频繁的调用，故使用redis缓存用户信息，提高效率。
+    // 1. 优先从redis缓存中取值
+    private User getCache(int userId) {
+        String userKey = RedisKeyUtil.getUserKey(userId);
+        return (User) redisTemplate.opsForValue().get(userKey);
+    }
+    // 2. 当缓存中取不到时，初始化缓存数据
+    private User initCache(int userId) {
+        User user = userMapper.selectById(userId);
+        String userKey = RedisKeyUtil.getUserKey(userId);
+        redisTemplate.opsForValue().set(userKey, user, 3600, TimeUnit.SECONDS);
+        return user;
+    }
+    // 3. 当用户数据变更时，清除缓存数据
+    private void clearCache(int userId) {
+        String userKey = RedisKeyUtil.getUserKey(userId);
+        redisTemplate.delete(userKey);
+    }
 
 }
