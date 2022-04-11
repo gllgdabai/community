@@ -32,6 +32,9 @@ public class ServiceLogAspect {
     public void before(JoinPoint joinPoint) {
         // 用户(ip) 在 xxx时间，访问了[com.dabai.community.service.xxx()]
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            return; //说明是一个特殊的调用，这里就不去处理了
+        }
         HttpServletRequest request = attributes.getRequest();
         String ip = request.getRemoteHost();
         String now = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());

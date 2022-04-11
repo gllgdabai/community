@@ -33,4 +33,11 @@ public interface CommentService {
      * @return 影响的行数
      */
     int addComment(Comment comment);
+
+    /**
+     *  根据id查询评论
+     * @param id 评论id
+     * @return 查询到的评论
+     */
+    Comment findCommentById(int id);
 }

@@ -3,6 +3,8 @@ package com.dabai.community.controller;
 import com.dabai.community.common.Constants;
 import com.dabai.community.entity.Page;
 import com.dabai.community.entity.User;
+import com.dabai.community.event.Event;
+import com.dabai.community.event.EventProducer;
 import com.dabai.community.service.FollowService;
 import com.dabai.community.service.UserService;
 import com.dabai.community.utils.CommunityUtil;
@@ -34,12 +36,24 @@ public class FollowController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EventProducer eventProducer;
+
     @PostMapping("/follow")
     @ResponseBody
     public String follow(int entityType, int entityId) {
         User user = hostHolder.getUser();
 
         followService.follow(user.getId(), entityType, entityId);
+
+        // 触发关注事件
+        Event event = new Event()
+                .setTopic(Constants.TOPIC_FOLLOW)
+                .setUserId(user.getId())
+                .setEntityType(entityType)
+                .setEntityId(entityId)
+                .setEntityUserId(entityId);
+        eventProducer.fireEvent(event);
 
         return CommunityUtil.getJsonString(0, "已关注");
     }
