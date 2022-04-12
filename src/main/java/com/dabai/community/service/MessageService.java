@@ -28,4 +28,15 @@ public interface MessageService {
      * @return  影响的行数
      */
     int readMessage(List<Integer> ids);
+
+    Message findLatestNotice(int userId, String topic);
+
+    int findNoticeCount(int userId, String topic);
+
+    int findNoticeUnreadCount(int userId, String topic);
+
+    /**
+     *  (分页)查询该用户某主题所包含的通知列表
+     */
+    List<Message> findNotices(int userId, String topic, int offset, int limit);
 }
