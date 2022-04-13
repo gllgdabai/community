@@ -2,7 +2,10 @@ package com.dabai.community.event;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dabai.community.common.Constants;
+import com.dabai.community.entity.DiscussPost;
 import com.dabai.community.entity.Message;
+import com.dabai.community.service.DiscussPostService;
+import com.dabai.community.service.ElasticSearchService;
 import com.dabai.community.service.MessageService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -26,6 +29,12 @@ public class EventConsumer {
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private DiscussPostService discussPostService;
+
+    @Autowired
+    private ElasticSearchService elasticSearchService;
 
     @KafkaListener(topics = {Constants.TOPIC_COMMENT, Constants.TOPIC_LIKE, Constants.TOPIC_FOLLOW})
     public void handleMessage(ConsumerRecord record) {
@@ -63,4 +72,24 @@ public class EventConsumer {
         messageService.addMessage(message);     // 将站内通知message 存入数据库
     }
 
+
+    // 消费发帖事件
+    @KafkaListener(topics = {Constants.TOPIC_POST})
+    public void handlePostMessage(ConsumerRecord record) {
+        if (record == null || record.value() == null) {
+            log.error("消息的内容为空!");
+            return;
+        }
+
+        Event event = JSONObject.parseObject(record.value().toString(), Event.class);
+        if (event == null) {
+            log.error("消息格式错误!");
+            return;
+        }
+
+        // 将帖子保存至es服务器中
+        DiscussPost discussPost = discussPostService.findDiscussPostById(event.getEntityId());
+        elasticSearchService.saveDiscussPost(discussPost);
+
+    }
 }

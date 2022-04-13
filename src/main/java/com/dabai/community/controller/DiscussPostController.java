@@ -5,6 +5,8 @@ import com.dabai.community.entity.Comment;
 import com.dabai.community.entity.DiscussPost;
 import com.dabai.community.entity.Page;
 import com.dabai.community.entity.User;
+import com.dabai.community.event.Event;
+import com.dabai.community.event.EventProducer;
 import com.dabai.community.service.CommentService;
 import com.dabai.community.service.DiscussPostService;
 import com.dabai.community.service.LikeService;
@@ -41,6 +43,9 @@ public class DiscussPostController {
     @Autowired
     private LikeService likeService;
 
+    @Autowired
+    private EventProducer eventProducer;
+
     @PostMapping("/add")
     @ResponseBody
     public String addDiscussPost(String title, String content) {
@@ -54,6 +59,14 @@ public class DiscussPostController {
         post.setContent(content);
         post.setCreateTime(new Date());
         discussPostService.addDiscussPost(post);
+
+        // 触发发帖事件
+        Event event = new Event()
+                .setTopic(Constants.TOPIC_POST)
+                .setUserId(user.getId())
+                .setEntityType(Constants.ENTITY_TYPE_POST)
+                .setEntityId(post.getId());
+        eventProducer.fireEvent(event);
 
         return CommunityUtil.getJsonString(0,"发布成功!");
     }

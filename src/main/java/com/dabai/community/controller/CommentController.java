@@ -62,6 +62,17 @@ public class CommentController {
         // 触发评论事件
         eventProducer.fireEvent(event);
 
+        // 如果评论了帖子，该帖子的属性-评论数量会被修改，相当于修改了帖子，因此也会触发发帖事件
+        if (comment.getEntityType() == Constants.ENTITY_TYPE_POST) {
+            // 触发发帖事件
+            event = new Event()
+                    .setTopic(Constants.TOPIC_POST)
+                    .setUserId(comment.getUserId())
+                    .setEntityType(Constants.ENTITY_TYPE_POST)
+                    .setEntityId(postId);
+            eventProducer.fireEvent(event);
+        }
+
         return "redirect:/discuss/detail/" + postId;
     }
 

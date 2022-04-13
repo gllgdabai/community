@@ -39,6 +39,9 @@ public class Constants {
     /** 事件的主题：关注 */
     public static final String TOPIC_FOLLOW = "follow";
 
+    /** 事件的主题：发帖 */
+    public static final String TOPIC_POST = "POST";
+
     /** 系统用户ID */
     public static final int SYSTEM_USER_ID = 1;
 
