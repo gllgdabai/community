@@ -46,4 +46,18 @@ public interface DiscussPostMapper {
      * @param commentCount 新的评论数量
      */
     int updateCommentCount(int id, int commentCount);
+
+    /**
+     *  更新帖子的类型
+     * @param id 帖子id
+     * @param type 新的类型
+     */
+    int updateType(int id, int type);
+
+    /**
+     * 更新帖子的状态
+     * @param id 帖子id
+     * @param status 新的类型
+     */
+    int updateStatus(int id, int status);
 }

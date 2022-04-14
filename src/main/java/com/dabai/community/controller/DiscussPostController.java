@@ -157,9 +157,69 @@ public class DiscussPostController {
 
         }
 
-
-
        return "/site/discuss-detail";
+    }
+
+    // 置顶、取消置顶，异步请求
+    @PostMapping("/top")
+    @ResponseBody
+    public String setTop(int id) {
+        DiscussPost discussPost = discussPostService.findDiscussPostById(id);
+        // 获取置顶状态，1为置顶，0为正常状态，1^1=0 0^1=1
+        int type = discussPost.getType()^1;
+        discussPostService.modifyType(id, type);
+        // 返回的结果
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", type);
+
+        // 由于帖子被修改了，触发了发帖事件
+        Event event = new Event()
+                .setTopic(Constants.TOPIC_POST)
+                .setUserId(hostHolder.getUser().getId())    // 版主
+                .setEntityType(Constants.ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJsonString(0, "操作成功!", map);
+    }
+
+    // 加精、取消加精，异步请求
+    @PostMapping("/refine")
+    @ResponseBody
+    public String setFine(int id) {
+        DiscussPost discussPost = discussPostService.findDiscussPostById(id);
+        // 获取加精状态，1为精华，0为正常，1^1=0 0^1=1
+        int status = discussPost.getStatus()^1;
+        discussPostService.modifyStatus(id, status);
+        // 返回的结果
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", status);
+
+        // 由于帖子被修改了，触发了发帖事件
+        Event event = new Event()
+                .setTopic(Constants.TOPIC_POST)
+                .setUserId(hostHolder.getUser().getId())    // 版主
+                .setEntityType(Constants.ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJsonString(0, "操作成功!", map);
+    }
+
+    // 拉黑(删除)，异步请求
+    @PostMapping("/delete")
+    @ResponseBody
+    public String setDelete(int id) {
+        discussPostService.modifyStatus(id, 2);
+        // 触发了删帖事件
+        Event event = new Event()
+                .setTopic(Constants.TOPIC_DELETE)
+                .setUserId(hostHolder.getUser().getId())    // 版主
+                .setEntityType(Constants.ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJsonString(0, "操作成功!");
     }
 
 }

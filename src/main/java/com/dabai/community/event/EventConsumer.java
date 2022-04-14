@@ -90,6 +90,23 @@ public class EventConsumer {
         // 将帖子保存至es服务器中
         DiscussPost discussPost = discussPostService.findDiscussPostById(event.getEntityId());
         elasticSearchService.saveDiscussPost(discussPost);
+    }
 
+    // 消费删帖事件
+    @KafkaListener(topics = {Constants.TOPIC_DELETE})
+    public void handleDeleteMessage(ConsumerRecord record) {
+        if (record == null || record.value() == null) {
+            log.error("消息的内容为空!");
+            return;
+        }
+
+        Event event = JSONObject.parseObject(record.value().toString(), Event.class);
+        if (event == null) {
+            log.error("消息格式错误!");
+            return;
+        }
+
+        // 将帖子从es服务器中删除
+        elasticSearchService.deleteDiscussPost(event.getEntityId());
     }
 }

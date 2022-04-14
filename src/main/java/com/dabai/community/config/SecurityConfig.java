@@ -51,6 +51,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         Constants.AUTHORITY_ADMIN,
                         Constants.AUTHORITY_MODERATOR
                 )
+                .antMatchers(
+                        "/discuss/top",
+                        "/discuss/refine"
+                )
+                .hasAnyAuthority(
+                        Constants.AUTHORITY_MODERATOR
+                )
+                .antMatchers(
+                        "/discuss/delete"
+                )
+                .hasAnyAuthority(
+                        Constants.AUTHORITY_ADMIN
+                )
                 .anyRequest().permitAll()// 除了上述请求路径，其他的都允许访问
                 .and().csrf().disable();    // 关闭Security的防止CSRF攻击的功能
 

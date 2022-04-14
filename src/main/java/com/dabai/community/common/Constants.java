@@ -40,7 +40,10 @@ public class Constants {
     public static final String TOPIC_FOLLOW = "follow";
 
     /** 事件的主题：发帖 */
-    public static final String TOPIC_POST = "POST";
+    public static final String TOPIC_POST = "post";
+
+    /** 事件的主题：发帖 */
+    public static final String TOPIC_DELETE = "delete";
 
     /** 系统用户ID */
     public static final int SYSTEM_USER_ID = 1;

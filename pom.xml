@@ -96,11 +96,17 @@
 <!--			<groupId>org.elasticsearch.client</groupId>-->
 <!--			<artifactId>elasticsearch-rest-high-level-client</artifactId>-->
 <!--		</dependency>-->
-		<!-- springsecurity-->
+		<!-- SpringSecurity-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<!-- Thymeleaf + SpringSecurity-->
+		<dependency>
+			<groupId>org.thymeleaf.extras</groupId>
+			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
+		</dependency>
+
 
 
 	</dependencies>

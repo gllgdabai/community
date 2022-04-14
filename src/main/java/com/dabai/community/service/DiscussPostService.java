@@ -41,4 +41,18 @@ public interface DiscussPostService {
      * @param commentCount 新的评论数量
      */
     int modifyCommentCount(int id, int commentCount);
+
+    /**
+     *  更新帖子的类型
+     * @param id 帖子id
+     * @param type 新的类型
+     */
+    int modifyType(int id, int type);
+
+    /**
+     * 更新帖子的状态
+     * @param id 帖子id
+     * @param status 新的类型
+     */
+    int modifyStatus(int id, int status);
 }
