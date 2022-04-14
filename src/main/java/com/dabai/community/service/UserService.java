@@ -2,7 +2,9 @@ package com.dabai.community.service;
 
 import com.dabai.community.entity.LoginTicket;
 import com.dabai.community.entity.User;
+import org.springframework.security.core.GrantedAuthority;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -71,4 +73,11 @@ public interface UserService {
      *  根据用户名查询用户
      */
     User findUserByName(String username);
+
+    /**
+     * 根据用户类型，获得相应权限
+     * @param userId 用户Id，用于查询用户
+     * @return 该用户的权限
+     */
+    Collection<? extends GrantedAuthority> getAuthorities(int userId);
 }
