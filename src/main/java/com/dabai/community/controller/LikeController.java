@@ -7,7 +7,9 @@ import com.dabai.community.event.EventProducer;
 import com.dabai.community.service.LikeService;
 import com.dabai.community.utils.CommunityUtil;
 import com.dabai.community.utils.HostHolder;
+import com.dabai.community.utils.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -31,6 +33,8 @@ public class LikeController {
     @Autowired
     private EventProducer eventProducer;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @PostMapping("/like")
     @ResponseBody
@@ -61,6 +65,12 @@ public class LikeController {
                     .setData("postId", postId);
             // 触发点赞事件
             eventProducer.fireEvent(event);
+        }
+
+        if (entityType == Constants.ENTITY_TYPE_POST) {
+            // 点赞帖子会影响分数，使用redis缓存需要重新计算分数的帖子
+            String redisKey = RedisKeyUtil.getPostScoreKey();
+            redisTemplate.opsForSet().add(redisKey, postId);
         }
 
         return CommunityUtil.getJsonString(0, "操作成功", map);

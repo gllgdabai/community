@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,12 +36,13 @@ public class HomeController {
     private LikeService likeService;
 
     @RequestMapping(path = "/index", method = RequestMethod.GET)
-    public String getIndexPage(Model model, Page page) {
+    public String getIndexPage(Model model, Page page,
+                               @RequestParam(name = "orderMode", defaultValue = "0") int orderMode) {
         //  方法调用前，SpringMVC会自动实例化Model和Page，并将Page注入到Model中
         // 所有，在thymeleaf中可以直接访问Page对象中的数据。
         page.setRows(discussPostService.findDiscussPostRows(0));    // 获取总行数
-        page.setPath("/index");
-        List<DiscussPost> posts = discussPostService.findDiscussPosts(0, page.getOffset(), page.getLimit());
+        page.setPath("/index?orderMode=" + orderMode);
+        List<DiscussPost> posts = discussPostService.findDiscussPosts(0, page.getOffset(), page.getLimit(), orderMode);
         List<Map<String, Object>> discussPosts = new ArrayList<>();
         if (posts != null) {
             for (DiscussPost post : posts) {
@@ -58,6 +60,7 @@ public class HomeController {
         // Model的底层为一个HashMap。
         // Model 中的数据存储在 request 作用域中，SringMVC默认采用转发的方式跳转到视图，本次请求结束，模型中的数据被销毁。
         model.addAttribute("discussPosts",discussPosts);    //使用Model向request域对象共享数据
+        model.addAttribute("orderMode", orderMode);
         return "/index";
     }
 

@@ -14,8 +14,9 @@ public interface DiscussPostService {
      * @param userId 用户Id，如果传入userId=0，则查询所有用户
      * @param offset 该页的起始行号
      * @param limit  该页的行数
+     * @param orderMode 排序模式，为了实现热度排序，新添加的形参
      */
-    List<DiscussPost> findDiscussPosts(int userId, int offset, int limit);
+    List<DiscussPost> findDiscussPosts(int userId, int offset, int limit, int orderMode);
 
     /**
      * 查询相关用户的讨论帖 数量
@@ -55,4 +56,11 @@ public interface DiscussPostService {
      * @param status 新的类型
      */
     int modifyStatus(int id, int status);
+
+    /**
+     *  更新帖子的分数
+     * @param id 帖子id
+     * @param score 新的分数
+     */
+    int modifyScore(int id, double score);
 }

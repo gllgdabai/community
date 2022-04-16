@@ -13,7 +13,9 @@ import com.dabai.community.service.LikeService;
 import com.dabai.community.service.UserService;
 import com.dabai.community.utils.CommunityUtil;
 import com.dabai.community.utils.HostHolder;
+import com.dabai.community.utils.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +48,9 @@ public class DiscussPostController {
     @Autowired
     private EventProducer eventProducer;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     @PostMapping("/add")
     @ResponseBody
     public String addDiscussPost(String title, String content) {
@@ -67,6 +72,10 @@ public class DiscussPostController {
                 .setEntityType(Constants.ENTITY_TYPE_POST)
                 .setEntityId(post.getId());
         eventProducer.fireEvent(event);
+
+        // 帖子刚发布需要计算初始分数，先使用redis缓存帖子，定时处理
+        String redisKey = RedisKeyUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey, post.getId());
 
         return CommunityUtil.getJsonString(0,"发布成功!");
     }
@@ -202,6 +211,10 @@ public class DiscussPostController {
                 .setEntityType(Constants.ENTITY_TYPE_POST)
                 .setEntityId(id);
         eventProducer.fireEvent(event);
+
+        // 帖子加精会影响分数，使用redis缓存需要重新计算分数的帖子
+        String redisKey = RedisKeyUtil.getPostScoreKey();
+        redisTemplate.opsForSet().add(redisKey, id);
 
         return CommunityUtil.getJsonString(0, "操作成功!", map);
     }

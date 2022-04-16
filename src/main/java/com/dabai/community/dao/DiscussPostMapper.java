@@ -13,12 +13,13 @@ import java.util.List;
 @Mapper
 public interface DiscussPostMapper {
     /**
-     *  分页选取相关用户讨论的帖子
+     *  分页选取相关用户讨论的帖子 (重构：添加了排序模式)
      * @param userId 用户Id，如果传入userId=0，则查询所有用户
      * @param offset 该页的起始行号
      * @param limit 每页显示多少条数据
+     * @param orderMode 排序模式，为了实现热度排序，新添加的形参
      */
-    List<DiscussPost> selectDiscussPosts(int userId, int offset, int limit);
+    List<DiscussPost> selectDiscussPosts(int userId, int offset, int limit, int orderMode);
 
     /**
      *  查询相关用户的帖子条数
@@ -60,4 +61,11 @@ public interface DiscussPostMapper {
      * @param status 新的类型
      */
     int updateStatus(int id, int status);
+
+    /**
+     *  更新帖子的分数
+     * @param id 帖子id
+     * @param score 新的分数
+     */
+    int updateScore(int id, double score);
 }

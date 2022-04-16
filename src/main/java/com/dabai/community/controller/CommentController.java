@@ -8,7 +8,9 @@ import com.dabai.community.event.EventProducer;
 import com.dabai.community.service.CommentService;
 import com.dabai.community.service.DiscussPostService;
 import com.dabai.community.utils.HostHolder;
+import com.dabai.community.utils.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +36,9 @@ public class CommentController {
 
     @Autowired
     private EventProducer eventProducer;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @PostMapping("/add/{postId}")
     public String addComment(@PathVariable("postId") int postId, Comment comment) {
@@ -71,7 +76,12 @@ public class CommentController {
                     .setEntityType(Constants.ENTITY_TYPE_POST)
                     .setEntityId(postId);
             eventProducer.fireEvent(event);
+
+            // 评论帖子会影响分数，使用redis缓存需要重新计算分数的帖子
+            String redisKey = RedisKeyUtil.getPostScoreKey();
+            redisTemplate.opsForSet().add(redisKey, postId);
         }
+
 
         return "redirect:/discuss/detail/" + postId;
     }
