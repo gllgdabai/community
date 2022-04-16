@@ -90,3 +90,10 @@ community:
 
 elasticSearch:
   url: 127.0.0.1:9200
+
+# caffeine
+caffeine:
+  posts:
+    max-size: 15
+    expire-seconds: 180
+
